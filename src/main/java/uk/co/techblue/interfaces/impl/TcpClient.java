@@ -13,8 +13,7 @@ import uk.co.techblue.interfaces.ItemQuoteEncoder;
 
 public class TcpClient {
 	
-	public static void main(final String args[]) throws ItemQuoteException{
-		
+	private void startTcpClient() throws ItemQuoteException{
 		final String hostName="localhost";
 		final int port = 8183;
 		Socket socket=null;
@@ -38,6 +37,13 @@ public class TcpClient {
 			} catch (IOException ioException) {
 				throw new ItemQuoteException();
 			}
+		}
+	}
+	
+	public static void main(final String args[]) throws ItemQuoteException{
+		final TcpClient tcpClient = new TcpClient();
+		for(int i=0;i<100;i++){
+			tcpClient.startTcpClient();
 		}
 	}
 }

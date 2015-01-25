@@ -9,15 +9,44 @@ import uk.co.techblue.interfaces.ClientServingDispatcher;
 import uk.co.techblue.interfaces.ProtocolFactory;
 
 public class ClientServingDispatcherImpl implements ClientServingDispatcher {
-
-	public void startClientDispatching(ServerSocket serverSocket,
-			Logger logger, ProtocolFactory protocolFactory) throws IOException {
-		for (;;) {
-			final Socket clientSocket = serverSocket.accept();
-			final Runnable protocol = protocolFactory.createServingProtocol(clientSocket, logger);
-			final Thread thread = new Thread(protocol);
+	
+	private int numberOfThreads;
+	
+	private static final String NUMBER_OF_THREAD = "8";
+	
+	private static final String THREAD_PROPERTY="Threads";
+	
+	public ClientServingDispatcherImpl(){
+		numberOfThreads = Integer.parseInt(System.getProperty(THREAD_PROPERTY, NUMBER_OF_THREAD));
+	}
+	
+	public void startClientDispatching(final ServerSocket serverSocket,final Logger logger,final ProtocolFactory protocolFactory) 
+			throws IOException {
+		for(int i=0;i<(numberOfThreads-1);i++){
+			Thread thread = new Thread(){
+				public void run(){
+					dispatcherLoop(serverSocket, logger, protocolFactory);
+				}
+			};
 			thread.start();
 			System.out.println("Created and started thread -: "+thread.getName());
+		}
+		dispatcherLoop(serverSocket, logger, protocolFactory);
+	}
+	
+	private void dispatcherLoop(final ServerSocket serverSocket, final Logger logger, final ProtocolFactory protocolFactory) {
+		for (;;) {
+			Socket clientSocket = null;
+			try {
+				clientSocket = serverSocket.accept();
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+			if (clientSocket == null) {
+				return;
+			}
+			final Runnable protocol = protocolFactory.createServingProtocol(clientSocket, logger);
+			protocol.run();
 		}
 	}
 
