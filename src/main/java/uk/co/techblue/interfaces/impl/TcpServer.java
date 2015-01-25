@@ -1,14 +1,9 @@
 package uk.co.techblue.interfaces.impl;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import uk.co.techblue.dto.ItemQuote;
-import uk.co.techblue.dto.ItemQuoteConstant;
-import uk.co.techblue.exception.ItemQuoteException;
-import uk.co.techblue.interfaces.ItemQuoteDecoder;
+import java.util.logging.Logger;
 
 public class TcpServer {
 	
@@ -16,23 +11,21 @@ public class TcpServer {
 		
 		final int port = 8183;
 		
+		final Logger LOGGER=null;
+		
 		ServerSocket serverSocket=null;
 		try {
 			serverSocket= new ServerSocket(port);
 			
 			for(;;){
 				final Socket clientSocket = serverSocket.accept();
-				final InputStream inputStream=clientSocket.getInputStream();
-				
-				final ItemQuoteDecoder itemQuoteDecoder=new ItemQuoteDecoderImpl(ItemQuoteConstant.DEFAULT_ENCODING);
-				final ItemQuote itemQuote=itemQuoteDecoder.decode(inputStream);
-				
-				System.out.println("Item number "+itemQuote.getNumber());
+				final EchoProtocol echoProtocol=new EchoProtocol(clientSocket, LOGGER);
+				final Thread clientServingThread = new Thread(echoProtocol);
+				clientServingThread.start();
+				System.out.println("Created and started thread -: "+clientServingThread.getName());
 			}
 		} catch (IOException io) {
 			io.printStackTrace();
-		} catch (ItemQuoteException iqe) {
-			iqe.printStackTrace();
 		}
 	}
 
